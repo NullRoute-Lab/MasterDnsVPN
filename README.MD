@@ -5,6 +5,11 @@
 **MasterDnsVPN** is a scientific and research-oriented project for carrying TCP traffic through DNS queries and responses. In broad goal, it is similar to projects such as DNSTT or SlipStream, but it follows a fundamentally different structure and implementation approach.
 This system is designed around compatibility with many resolver behaviors and harsh network conditions, with the goal of preserving the highest possible stability and data delivery even in the worst cases.
 
+
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/masterking32/MasterDnsVPN) [![oosmetrics](https://api.oosmetrics.com/api/v1/badge/achievement/5c7b2ce0-0af6-4648-8ded-fd1e847096cd.svg)](https://oosmetrics.com/repo/masterking32/MasterDnsVPN)
+
+<a href="https://trendshift.io/repositories/23688" target="_blank"><img src="https://trendshift.io/api/badge/repositories/23688" alt="masterking32%2FMasterDnsVPN | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+
 ### 📊 MasterDnsVPN Compared with Similar Projects
 
 | Feature | SlipStream | DNSTT | MasterDnsVPN |
@@ -98,7 +103,24 @@ A brief overview of the main capabilities of MasterDnsVPN:
 
 This list is only a high-level summary. The related sections below explain each area in more detail.
 
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/masterking32/MasterDnsVPN)
+---
+
+## 🌐 Battle-Tested During a Total Internet Blackout
+
+MasterDnsVPN isn't just a theoretical project. It is battle-tested and proven to work in environments where the global internet is completely severed.
+
+Recently, during a 70+ day internet blackout in Iran, authorities didn't just block VPNs or filter websites—they completely pulled the plug on international bandwidth. With 99% of the connection to the outside world physically cut off, users were trapped inside a closed, local intranet. 
+
+Standard circumvention tools are useless when there is no international internet to connect to. Yet, during this massive shutdown, MasterDnsVPN stood out as one of the very few lifelines that actually kept users connected to the global web.
+
+**How did it survive a total shutdown?**
+Instead of acting like a standard VPN, MasterDnsVPN relies on smart DNS tunneling techniques to pierce through the blackout:
+* **Multiple Resolvers:** It routes traffic through various DNS resolvers, ensuring the connection never relies on a single, easily blockable path.
+* **Encryption & Data Splitting:** It encrypts your data and breaks it down into tiny, scattered pieces.
+* **Disguised as Legitimate Traffic:** It wraps these data pieces inside standard, perfectly normal DNS queries.
+* **Bypassing Local Traps:** Because the traffic looks exactly like basic, everyday DNS requests, firewalls allow it through. The data gets resolved and reaches the outside world—even if the network forces you to use their own restricted, government-controlled local resolvers.
+
+This exact combination is what allowed MasterDnsVPN to maintain a stable connection when the outside world was completely blocked.
 
 ---
 
@@ -241,7 +263,124 @@ For convenience, prebuilt client and server binaries are published in the releas
 
 ---
 
-### Section 2.2: 🪟 Preparing and Running the Client on Windows
+### Section 2.2: 📦 MasterDnsVPN Docker Image
+
+---
+
+#### Section 2.2.1: ⚠️ Overview
+
+This Docker image runs the MasterDnsVPN server in a containerized environment and supports multi-architecture builds.
+
+It automatically:
+
+* Boots a default configuration if none exists
+* Injects your domain on first startup
+* Stores persistent data in `/data`
+
+---
+
+#### Section 2.2.2: 🖥 Supported Architectures
+
+* linux/amd64
+* linux/arm/v5
+* linux/arm/v7
+* linux/arm64/v8
+* linux/mips64le
+
+---
+
+#### Section 2.2.3: 🚀 Quick Start
+
+Run the container with Docker:
+
+```bash
+docker run -d \
+  --name masterdnsvpn \
+  --restart unless-stopped \
+  -e DOMAIN=v.example.com \
+  -v $(pwd)/data:/data \
+  -p 53:53/tcp \
+  -p 53:53/udp \
+  ghcr.io/masterking32/masterdnsvpn:latest
+```
+
+---
+
+#### Section 2.2.4: 🧪 Example with docker-compose
+
+```yaml
+services:
+  masterdnsvpn:
+    image: ghcr.io/masterking32/masterdnsvpn:latest
+    restart: unless-stopped
+    environment:
+      - DOMAIN=v.example.com
+    volumes:
+      - ./data:/data
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+```
+
+---
+
+#### Section 2.2.5: ⚙️ Required Environment Variables
+
+| Variable | Description                             |
+| -------- | --------------------------------------- |
+| DOMAIN   | Your DNS domain (required on first run) |
+
+> ⚠️ If `DOMAIN` is not set on first boot, the container will stop with an error.
+
+---
+
+#### Section 2.2.6: 📁 Persistent Data
+
+Stored in `/data`:
+
+* `server_config.toml`
+* `encrypt_key.txt`
+
+You can mount it as volume:
+
+```bash
+-v ./data:/data
+```
+
+---
+
+#### Section 2.2.7: 🔧 MikroTik / RouterOS Usage
+
+For MikroTik containers:
+
+* Use latest v7 MikroTik RouterOS
+* Destination NAT port UDP/TCP 53 to your container
+* Full MikroTik container setup: https://help.mikrotik.com/docs/spaces/ROS/pages/84901929/Container
+
+Example:
+
+```bash
+/container mounts
+add dst=/data list=MasterDnsVPN src=/containers/mounts/MasterDnsVPN
+
+/container envs
+add key=DOMAIN list=MasterDnsVPN value=v.example.com
+
+/container add check-certificate=no dns=1.1.1.1 envlists=MasterDnsVPN hostname=MasterDnsVPN interface=MasterDnsVPN layer-dir="" mountlists=MasterDnsVPN name=MasterDnsVPN remote-image=ghcr.io/masterking32/masterdnsvpn:latest root-dir=/containers/data/MasterDnsVPN start-on-boot=yes
+```
+
+---
+
+#### Section 2.2.8: 📌 Notes
+
+* DNS port `53` is required (UDP/TCP)
+* Do NOT run another DNS service on the same host
+* Designed for production use but still lightweight
+* No systemd or host modifications required
+
+---
+
+### Section 2.3: 🪟 Preparing and Running the Client on Windows
 
 - After downloading the Windows package, extract it.
 - Open `client_config.toml` with a text editor such as Notepad.
@@ -251,7 +390,7 @@ For convenience, prebuilt client and server binaries are published in the releas
 
 ---
 
-### Section 2.3: 🐧 Preparing and Running on Linux / macOS
+### Section 2.4: 🐧 Preparing and Running on Linux / macOS
 
 After downloading the package on Linux:
 
@@ -290,7 +429,7 @@ Then run:
 
 ---
 
-### Section 2.4: 🧑‍💻 Run Directly from Source (Go)
+### Section 2.5: 🧑‍💻 Run Directly from Source (Go)
 
 > ⚠️ This section is intended for developers or users who want to run the current Go source directly.
 
@@ -810,6 +949,9 @@ You can review these related projects here:
 
 - [MasterDnsWeb (Web Management Client)](https://github.com/abolix/MasterDnsWeb)
   A web-based management client for MasterDnsVPN, designed to make it easy to manage one or multiple instances at the same time. Developed independently by Abolix.
+
+- [KevinNet DNS](https://github.com/kamalalhagh/kevinnet-dns)
+  A companion tool for MasterDnsVPN that discovers and validates working DNS resolvers, especially for users in Iran. It generates ready-to-use configuration files and performs end-to-end tunnel verification. This project is developed independently by Kevin Haji.
 
 ---
 
